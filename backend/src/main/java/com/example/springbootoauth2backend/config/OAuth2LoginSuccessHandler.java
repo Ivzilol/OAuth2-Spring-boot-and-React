@@ -37,7 +37,8 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
 
         OAuth2AuthenticationToken oAuth2AuthenticationToken = (OAuth2AuthenticationToken) authentication;
         if ("github".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())
-                || "google".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())) {
+                || "google".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())
+                || "facebook".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())) {
             DefaultOAuth2User principal = (DefaultOAuth2User) authentication.getPrincipal();
             Map<String, Object> attributes = principal.getAttributes();
             String email = attributes.getOrDefault("email", "").toString();
@@ -55,7 +56,8 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
     }
 
     private static void authUser(UserEntity user, Map<String, Object> attributes, UserEntity user1, OAuth2AuthenticationToken oAuth2AuthenticationToken) {
-        if (oAuth2AuthenticationToken.getAuthorizedClientRegistrationId().equals("github")) {
+        if (oAuth2AuthenticationToken.getAuthorizedClientRegistrationId().equals("github") ||
+                oAuth2AuthenticationToken.getAuthorizedClientRegistrationId().equals("facebook")) {
             DefaultOAuth2User newUser = new DefaultOAuth2User(List.of(new SimpleGrantedAuthority(user.getRole().name())),
                     attributes, "id");
             Authentication securityAuth = new OAuth2AuthenticationToken(newUser, List.of(new SimpleGrantedAuthority(user1.getRole().name())),
@@ -81,6 +83,9 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
         }
         if (oAuth2AuthenticationToken.getAuthorizedClientRegistrationId().equals("google")) {
             userEntity.setSource(RegistrationSource.GOOGLE);
+        }
+        if (oAuth2AuthenticationToken.getAuthorizedClientRegistrationId().equals("facebook")) {
+            userEntity.setSource(RegistrationSource.FACEBOOK);
         }
         userService.saveUser(userEntity);
         authUser(userEntity, attributes, userEntity, oAuth2AuthenticationToken);
