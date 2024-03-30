@@ -26,6 +26,8 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
 
     private final UserService userService;
 
+    private static final String URL = "http://localhost:3000";
+
     public OAuth2LoginSuccessHandler(UserService userService) {
         this.userService = userService;
     }
@@ -42,17 +44,17 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
             String name = attributes.getOrDefault("name", "").toString();
             Optional<UserEntity> user = this.userService.findByEmail(email);
             if (user.isPresent()) {
-                authNewUser(user.get(), attributes, user.get(), oAuth2AuthenticationToken);
+                authUser(user.get(), attributes, user.get(), oAuth2AuthenticationToken);
             } else {
-                saveNewUser(oAuth2AuthenticationToken, attributes, email, name);
+                saveAndAuthNewUser(oAuth2AuthenticationToken, attributes, email, name);
             }
         }
         this.setAlwaysUseDefaultTargetUrl(true);
-        this.setDefaultTargetUrl("http://localhost:3000");
+        this.setDefaultTargetUrl(URL);
         super.onAuthenticationSuccess(request, response, authentication);
     }
 
-    private static void authNewUser(UserEntity user, Map<String, Object> attributes, UserEntity user1, OAuth2AuthenticationToken oAuth2AuthenticationToken) {
+    private static void authUser(UserEntity user, Map<String, Object> attributes, UserEntity user1, OAuth2AuthenticationToken oAuth2AuthenticationToken) {
         if (oAuth2AuthenticationToken.getAuthorizedClientRegistrationId().equals("github")) {
             DefaultOAuth2User newUser = new DefaultOAuth2User(List.of(new SimpleGrantedAuthority(user.getRole().name())),
                     attributes, "id");
@@ -69,7 +71,7 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
         }
     }
 
-    private void saveNewUser(OAuth2AuthenticationToken oAuth2AuthenticationToken, Map<String, Object> attributes, String email, String name) {
+    private void saveAndAuthNewUser(OAuth2AuthenticationToken oAuth2AuthenticationToken, Map<String, Object> attributes, String email, String name) {
         UserEntity userEntity = new UserEntity();
         userEntity.setRole(UserRole.ROLE_USER);
         userEntity.setEmail(email);
@@ -81,6 +83,6 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
             userEntity.setSource(RegistrationSource.GOOGLE);
         }
         userService.saveUser(userEntity);
-        authNewUser(userEntity, attributes, userEntity, oAuth2AuthenticationToken);
+        authUser(userEntity, attributes, userEntity, oAuth2AuthenticationToken);
     }
 }
