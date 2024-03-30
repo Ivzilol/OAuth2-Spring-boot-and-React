@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
@@ -38,26 +39,26 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
             Map<String, Object> attributes = principal.getAttributes();
             String email = attributes.getOrDefault("email", "").toString();
             String name = attributes.getOrDefault("name", "").toString();
-            userService.findByEmail(email)
-                    .ifPresentOrElse(user -> {
-                        DefaultOAuth2User newUser = new DefaultOAuth2User(List.of(new SimpleGrantedAuthority(user.getRole().name())),
-                                attributes, "id");
-                        Authentication securityAuth = new OAuth2AuthenticationToken(newUser, List.of(new SimpleGrantedAuthority(user.getRole().name())),
-                                oAuth2AuthenticationToken.getAuthorizedClientRegistrationId());
-                        SecurityContextHolder.getContext().setAuthentication(securityAuth);
-                    }, () -> {
-                        UserEntity userEntity = new UserEntity();
-                        userEntity.setRole(UserRole.ROLE_USER);
-                        userEntity.setEmail(email);
-                        userEntity.setName(name);
-                        userEntity.setSource(RegistrationSource.GITHUB);
-                        userService.saveUser(userEntity);
-                        DefaultOAuth2User newUser = new DefaultOAuth2User(List.of(new SimpleGrantedAuthority(userEntity.getRole().name())),
-                                attributes, "id");
-                        Authentication securityAuth = new OAuth2AuthenticationToken(newUser, List.of(new SimpleGrantedAuthority(userEntity.getRole().name())),
-                                oAuth2AuthenticationToken.getAuthorizedClientRegistrationId());
-                        SecurityContextHolder.getContext().setAuthentication(securityAuth);
-                    });
+            Optional<UserEntity> user = this.userService.findByEmail(email);
+            if (user.isPresent()) {
+                DefaultOAuth2User newUser = new DefaultOAuth2User(List.of(new SimpleGrantedAuthority(user.get().getRole().name())),
+                        attributes, "id");
+                Authentication securityAuth = new OAuth2AuthenticationToken(newUser, List.of(new SimpleGrantedAuthority(user.get().getRole().name())),
+                        oAuth2AuthenticationToken.getAuthorizedClientRegistrationId());
+                SecurityContextHolder.getContext().setAuthentication(securityAuth);
+            } else {
+                UserEntity userEntity = new UserEntity();
+                userEntity.setRole(UserRole.ROLE_USER);
+                userEntity.setEmail(email);
+                userEntity.setName(name);
+                userEntity.setSource(RegistrationSource.GITHUB);
+                userService.saveUser(userEntity);
+                DefaultOAuth2User newUser = new DefaultOAuth2User(List.of(new SimpleGrantedAuthority(userEntity.getRole().name())),
+                        attributes, "id");
+                Authentication securityAuth = new OAuth2AuthenticationToken(newUser, List.of(new SimpleGrantedAuthority(userEntity.getRole().name())),
+                        oAuth2AuthenticationToken.getAuthorizedClientRegistrationId());
+                SecurityContextHolder.getContext().setAuthentication(securityAuth);
+            }
         }
         this.setAlwaysUseDefaultTargetUrl(true);
         this.setDefaultTargetUrl("http://localhost:3000");
