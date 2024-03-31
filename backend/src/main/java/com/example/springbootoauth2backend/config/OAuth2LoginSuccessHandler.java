@@ -58,19 +58,19 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
     private static void authUser(UserEntity user, Map<String, Object> attributes, UserEntity user1, OAuth2AuthenticationToken oAuth2AuthenticationToken) {
         if (oAuth2AuthenticationToken.getAuthorizedClientRegistrationId().equals("github") ||
                 oAuth2AuthenticationToken.getAuthorizedClientRegistrationId().equals("facebook")) {
-            DefaultOAuth2User newUser = new DefaultOAuth2User(List.of(new SimpleGrantedAuthority(user.getRole().name())),
-                    attributes, "id");
-            Authentication securityAuth = new OAuth2AuthenticationToken(newUser, List.of(new SimpleGrantedAuthority(user1.getRole().name())),
-                    oAuth2AuthenticationToken.getAuthorizedClientRegistrationId());
-            SecurityContextHolder.getContext().setAuthentication(securityAuth);
+            auth(user, attributes, "id", user1, oAuth2AuthenticationToken);
         }
         if (oAuth2AuthenticationToken.getAuthorizedClientRegistrationId().equals("google")) {
-            DefaultOAuth2User newUser = new DefaultOAuth2User(List.of(new SimpleGrantedAuthority(user.getRole().name())),
-                    attributes, "sub");
-            Authentication securityAuth = new OAuth2AuthenticationToken(newUser, List.of(new SimpleGrantedAuthority(user1.getRole().name())),
-                    oAuth2AuthenticationToken.getAuthorizedClientRegistrationId());
-            SecurityContextHolder.getContext().setAuthentication(securityAuth);
+            auth(user, attributes, "sub", user1, oAuth2AuthenticationToken);
         }
+    }
+
+    private static void auth(UserEntity user, Map<String, Object> attributes, String id, UserEntity user1, OAuth2AuthenticationToken oAuth2AuthenticationToken) {
+        DefaultOAuth2User newUser = new DefaultOAuth2User(List.of(new SimpleGrantedAuthority(user.getRole().name())),
+                attributes, id);
+        Authentication securityAuth = new OAuth2AuthenticationToken(newUser, List.of(new SimpleGrantedAuthority(user1.getRole().name())),
+                oAuth2AuthenticationToken.getAuthorizedClientRegistrationId());
+        SecurityContextHolder.getContext().setAuthentication(securityAuth);
     }
 
     private void saveAndAuthNewUser(OAuth2AuthenticationToken oAuth2AuthenticationToken, Map<String, Object> attributes, String email, String name) {
