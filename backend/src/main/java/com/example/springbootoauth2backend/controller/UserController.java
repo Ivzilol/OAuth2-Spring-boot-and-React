@@ -2,7 +2,6 @@ package com.example.springbootoauth2backend.controller;
 
 import com.example.springbootoauth2backend.model.entity.UserEntity;
 import com.example.springbootoauth2backend.model.entity.UserRole;
-import com.example.springbootoauth2backend.repository.UserRepository;
 import com.example.springbootoauth2backend.service.UserService;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
