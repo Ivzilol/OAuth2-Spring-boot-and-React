@@ -78,14 +78,10 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
         userEntity.setRole(UserRole.ROLE_USER);
         userEntity.setEmail(email);
         userEntity.setName(name);
-        if (oAuth2AuthenticationToken.getAuthorizedClientRegistrationId().equals("github")) {
-            userEntity.setSource(RegistrationSource.GITHUB);
-        }
-        if (oAuth2AuthenticationToken.getAuthorizedClientRegistrationId().equals("google")) {
-            userEntity.setSource(RegistrationSource.GOOGLE);
-        }
-        if (oAuth2AuthenticationToken.getAuthorizedClientRegistrationId().equals("facebook")) {
-            userEntity.setSource(RegistrationSource.FACEBOOK);
+        switch (oAuth2AuthenticationToken.getAuthorizedClientRegistrationId()) {
+            case "github" -> userEntity.setSource(RegistrationSource.GITHUB);
+            case "google" -> userEntity.setSource(RegistrationSource.GOOGLE);
+            case "facebook" -> userEntity.setSource(RegistrationSource.FACEBOOK);
         }
         userService.saveUser(userEntity);
         authUser(userEntity, attributes, userEntity, oAuth2AuthenticationToken);
